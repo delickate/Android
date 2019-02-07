@@ -1,0 +1,7 @@
+//SANI:
+Here is a code to get json response from http request kotlin
+Fuel.get("https://URL/api/databaseupdate/formkey")
+                .responseJson { request, response, result ->
+                    Log.v("response", result.get().content)
+                    
+                }
