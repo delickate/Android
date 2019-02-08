@@ -1,0 +1,7 @@
+var livevar = "http://www.domainname.com/Api/login"
+
+    //SANI: Simple post request
+            Fuel.post(livevar, listOf("username" to username, "password" to password))
+                    .responseJson { request, response, result ->
+                       // Log.v("response", result.get().content)
+}
