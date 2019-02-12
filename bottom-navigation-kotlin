@@ -1,0 +1,123 @@
+//SANI: Gradle (app)
+///////////////////////////////////////////////////////////////
+dependencies {
+    ....
+//SANI: To add top navigation
+    implementation 'com.android.support:design:28.0.0'
+    }
+    
+ //SANI: Actvity Class
+ ///////////////////////////////////////////////////////////////////////////////////
+ package com.checklayout.delickate_office.practice
+
+
+import android.os.Bundle
+import android.support.v7.app.ActionBar
+
+import android.support.design.widget.BottomNavigationView
+import android.support.v7.app.AppCompatActivity
+
+class DatabasesActivity : AppCompatActivity() {
+
+    lateinit var toolbar: ActionBar  //SANI: For bottom navigation
+
+    //SANI: Click event bottom navigation
+    private val mOnNavigationItemSelectedListener = BottomNavigationView.OnNavigationItemSelectedListener { item ->
+        when (item.itemId) {
+            R.id.navigation_home -> {
+
+                return@OnNavigationItemSelectedListener true
+            }
+            R.id.navigation_databases -> {
+
+                return@OnNavigationItemSelectedListener true
+            }
+            R.id.navigation_contactus -> {
+
+                return@OnNavigationItemSelectedListener true
+            }
+        }
+        false
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_databases)
+
+        //SANI: Initialization of bottom navigation
+        toolbar = supportActionBar!!
+        val bottomNavigation: BottomNavigationView = findViewById(R.id.navigationView)
+    }
+}
+
+//SANI: XML
+
+================================================================
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".dashboardActivity">
+
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Contact Us"
+        android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+        android:id="@+id/textview_dashboard"
+
+        tools:ignore="MissingConstraints" />
+
+
+    <FrameLayout
+        android:id="@+id/container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+
+    <android.support.design.widget.BottomNavigationView
+        android:id="@+id/navigationView"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="0dp"
+        android:layout_marginStart="0dp"
+        android:background="?android:attr/windowBackground"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:itemBackground="@color/colorPrimary"
+        app:itemIconTint="@color/white"
+        app:itemTextColor="@color/white"
+        app:menu="@menu/bottom_navigation"/>
+
+</android.support.constraint.ConstraintLayout>
+
+//SANI: NAvigation xml
+====================================
+
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/navigation_home"
+        android:icon="@drawable/home"
+        android:title="Home"/>
+
+    <item
+        android:id="@+id/navigation_databases"
+        android:icon="@drawable/databases"
+        android:title="Databases"/>
+
+    <item
+        android:id="@+id/navigation_contactus"
+        android:icon="@drawable/contact"
+        android:title="Contact us"/>
+
+
+
+
+
+</menu>
