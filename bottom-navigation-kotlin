@@ -50,7 +50,7 @@ class DatabasesActivity : AppCompatActivity() {
     }
 }
 
-//SANI: XML
+//SANI: res/layout/ XML
 
 ================================================================
 <?xml version="1.0" encoding="utf-8"?>
@@ -89,13 +89,13 @@ class DatabasesActivity : AppCompatActivity() {
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:itemBackground="@color/colorPrimary"
-        app:itemIconTint="@color/white"
-        app:itemTextColor="@color/white"
+        app:itemIconTint="@drawable/bottom_navigation_color"
+       app:itemTextColor="@drawable/bottom_navigation_color"
         app:menu="@menu/bottom_navigation"/>
 
 </android.support.constraint.ConstraintLayout>
 
-//SANI: NAvigation xml
+//SANI: res/menu/ NAvigation xml
 ====================================
 
 <?xml version="1.0" encoding="utf-8"?>
@@ -121,3 +121,12 @@ class DatabasesActivity : AppCompatActivity() {
 
 
 </menu>
+
+//SANI: res/drawable/bottom_navigation_color
+=================================================
+
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_checked="true"  android:color="#fff000"  />
+    <item android:state_checked="false" android:color="@color/white"/>
+</selector>
