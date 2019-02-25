@@ -1,0 +1,111 @@
+//SANI: Step 1: Add gridview and activity xml (mainActivity.xml)
+<GridView
+        android:id="@+id/gridview_category"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:columnWidth="150dp"
+        android:horizontalSpacing="15dp"
+        android:numColumns="auto_fit"
+        android:verticalSpacing="15dp" />
+        
+//SANI: Step 2: Create an xml file (res/layout/gridview_entry.xml) in layout folder to design grid data. For example, i want
+// to show image and title text beneath image for single entry
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="150dp"
+    android:layout_height="wrap_content"
+    android:background="#ddd"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="15dp">
+
+    <ImageView
+        android:id="@+id/gridimage"
+        android:layout_width="150dp"
+        android:layout_height="120dp"
+        app:srcCompat="@drawable/cat_computer" />
+
+    <TextView
+        android:id="@+id/gridtext"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="Computers"
+        android:textSize="20sp" />
+</LinearLayout>
+
+//SANI: Step 3: Create two classes inside mainActivity class
+/////////////////// GRID VIEW CLASS //////////////////////////
+    class Griddata {
+        var name: String? = null
+        var image: Int? = null
+
+        constructor(name: String, image: Int) {
+            this.name = name
+            this.image = image
+        }
+    }
+
+    class gridviewAdapter : BaseAdapter {
+        var gridList = ArrayList<Griddata>()
+        var context: Context? = null
+
+        constructor(context: Context, foodsList: ArrayList<Griddata>) : super() {
+            this.context = context
+            this.gridList = foodsList
+        }
+
+        override fun getCount(): Int {
+            return gridList.size
+        }
+
+        override fun getItem(position: Int): Any {
+            return gridList[position]
+        }
+
+        override fun getItemId(position: Int): Long {
+            return position.toLong()
+        }
+
+        override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
+            val food = this.gridList[position]
+
+            var inflator = context!!.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
+            var gridImageView = inflator.inflate(R.layout.gridview_entry, null)
+            gridImageView.gridimage.setImageResource(food.image!!)
+            gridImageView.gridtext.text = food.name!!
+
+            return gridImageView
+        }
+    }
+    /////////////////// END GRID VIEW CLASS //////////////////////////
+    
+    
+    //SANI: Step 4: Time to call these class.
+    
+    //SANI: Step 5: Class variable declarations
+     //////////////SANI: GRID VIEW ////////////////////
+    var adapter: gridviewAdapter? = null
+    var gridList = ArrayList<Griddata>()
+    //////////SANI: END GRID VIEW ///////////////////
+     
+    //SANI: Step 6: Add items to gird
+    ////////////////SANI: GRID VIEW ///////////////////////////
+        gridList.add(Griddata("Coffee", R.drawable.cat_computer))
+        gridList.add(Griddata("Espersso", R.drawable.cat_leptop))
+        gridList.add(Griddata("French Fires", R.drawable.cat_phone))
+        gridList.add(Griddata("Honey", R.drawable.cat_tab))
+        gridList.add(Griddata("Coffee", R.drawable.cat_computer))
+        gridList.add(Griddata("Espersso", R.drawable.cat_leptop))
+        gridList.add(Griddata("French Fires", R.drawable.cat_phone))
+        gridList.add(Griddata("Honey", R.drawable.cat_tab))
+        gridList.add(Griddata("Coffee", R.drawable.cat_computer))
+        gridList.add(Griddata("Espersso", R.drawable.cat_leptop))
+        gridList.add(Griddata("French Fires", R.drawable.cat_phone))
+        gridList.add(Griddata("Honey", R.drawable.cat_tab))
+
+        adapter = gridviewAdapter(this, gridList)
+
+        gridview_category.adapter = adapter
+        ////////////////SANI: END GRID VIEW ///////////////////////////
