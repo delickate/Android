@@ -1,0 +1,239 @@
+How to populate listview using dynamically using HTTP GET response.
+
+activit-main.xml:
+==================================================
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="fill_parent"
+              android:layout_height="fill_parent"
+              android:orientation="vertical"
+              android:background="@color/colorBrochure">
+
+    <ImageView
+            android:id="@+id/img_logo"
+            android:layout_marginTop="20sp"
+            android:maxWidth="180dp"
+            android:maxHeight="180dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/logo"
+            android:layout_gravity="center_horizontal" />
+
+    <ListView
+            android:id="@+id/section_list_view"
+            android:layout_marginTop="100dp"
+            android:layout_width="match_parent"
+            android:listSelector="@color/colorWhite"
+            android:divider="@color/colorBrochure"
+            android:layout_margin="50dp"
+            android:dividerHeight="50.0sp"
+            
+            android:background="@drawable/listview_style"
+            android:layout_height="wrap_content">
+    </ListView>
+
+</LinearLayout>
+
+
+mainActivity.java
+=================================
+package com.example.trio
+
+import android.graphics.Color
+import android.os.AsyncTask
+import android.os.Build
+import android.support.v7.app.AppCompatActivity
+import android.os.Bundle
+import android.support.annotation.RequiresApi
+import android.util.Log
+import android.view.View
+import android.widget.ArrayAdapter
+import android.widget.ListView
+import org.json.JSONArray
+import org.json.JSONObject
+import java.io.*
+import java.net.HttpURLConnection
+import java.net.URL
+import android.widget.TextView
+import android.view.ViewGroup
+
+
+
+
+
+
+class MainActivity : AppCompatActivity() {
+
+    val CONNECTON_TIMEOUT_MILLISECONDS = 60000
+
+
+
+      override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+
+        //SANI: Api URL
+        var livevar = "http://www.go4smart.com/Api/websections"
+        var query_string = ""
+
+        //SANI: Hit to API
+        HttpTask( {
+
+            if (it == null) {
+                // println("connection error")
+                return@HttpTask
+            }
+            //Log.v("response", it)
+
+
+            var json = JSONObject(it)
+            val getstatus = json.get("status")
+
+            if(getstatus == "error")
+            {
+                var getmessage = json.get("data")
+            }else{
+                var response_data = json.get("data")
+
+                var json_array = JSONArray(response_data.toString())
+
+                val lView = findViewById(R.id.section_list_view) as ListView
+                val listItems = arrayOfNulls<String>(json_array.length())
+
+               for (i in 0 until json_array.length())
+               {
+                   var json_data = JSONObject(json_array[i].toString())
+                   listItems[i] = json_data.get("wsc_name").toString()
+                   //    Log.v("response", json_data.get("wsc_name").toString())
+               }
+
+                val adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, listItems)
+                lView.adapter = adapter
+
+
+
+
+            }
+
+        } ).execute("GET", livevar, query_string.toString())
+
+
+    }
+
+    ///////////////////////////////////
+    class HttpTask(callback: (String?) -> Unit) : AsyncTask<String, Unit, String>()  {
+
+        var callback = callback
+
+        override fun doInBackground(vararg params: String): String? {
+            val boundary: String
+            boundary = "===" + System.currentTimeMillis() + "===";
+
+            val url = URL(params[1])
+            val httpClient = url.openConnection() as HttpURLConnection
+            httpClient.setReadTimeout(60000)
+            httpClient.setConnectTimeout(60000)
+            httpClient.requestMethod = params[0]
+
+            if (params[0] == "POST") {
+                httpClient.instanceFollowRedirects = false
+                httpClient.doOutput = true
+                httpClient.doInput = true
+                httpClient.useCaches = false
+
+                httpClient.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+                httpClient.setRequestProperty("charset", "utf-8");
+               // httpClient.setRequestProperty("SANI-API-KEY", "200ceb26807d6bf99fd6f4f0d1ca54d4");
+                //httpClient.setRequestProperty("Content-Length", Integer.toString(params.getBytes().length));
+            }
+            try {
+                if (params[0] == "POST") {
+                    httpClient.connect()
+                    val os = httpClient.getOutputStream()
+                    val writer = BufferedWriter(OutputStreamWriter(os, "UTF-8"))
+                    writer.write(params[2])
+                    writer.flush()
+                    writer.close()
+                    os.close()
+                }
+                if (httpClient.responseCode == HttpURLConnection.HTTP_OK) {
+                    val stream = BufferedInputStream(httpClient.inputStream)
+                    val data: String = readStream(inputStream = stream)
+                    //Log.v("response", data)
+                    // val error_message = findViewById<View>(R.id.errormessage) as TextView
+                    //////////////////////////////////////////////////
+                    //var json = JSONObject(data)
+                    //Log.v("response", json.toString())
+                    //val getstatus = json.get("status")
+
+                    //Log.v("response", getstatus.toString())
+
+                    //if(getstatus == "error")
+                    //{
+                    //    var getmessage = json.get("data")
+                    //error_message.text = getmessage.toString()
+                    //}else{
+                    //error_message.text = "Success"
+                    //startActivity(Intent(this@MainActivity,dashboardActivity::class.java))
+                    //}
+                    //////////////////////////////////////////////////
+                    return data
+                } else {
+                    return ""
+                    //println("ERROR ${httpClient.responseCode}")
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
+                httpClient.disconnect()
+            }
+
+            return null
+        }
+
+        fun readStream(inputStream: BufferedInputStream): String {
+            val bufferedReader = BufferedReader(InputStreamReader(inputStream))
+            val stringBuilder = StringBuilder()
+            bufferedReader.forEachLine { stringBuilder.append(it) }
+            return stringBuilder.toString()
+        }
+
+        override fun onPostExecute(result: String?) {
+            super.onPostExecute(result)
+            callback(result)
+        }
+    }
+
+    companion object {
+        val TAG = "MainActivity"
+    }
+
+
+
+    ///////////////////////////////////
+}
+
+
+
+
+res/drawable/listview_style:
+========================================================
+<shape xmlns:android="http://schemas.android.com/apk/res/android" >
+    <gradient
+            android:startColor="@color/colorButton"
+            android:endColor="@color/colorButton"
+            android:angle="270"/>
+    <corners
+            android:topLeftRadius="10dp"
+            android:topRightRadius="10dp"
+            android:bottomLeftRadius="10dp"
+            android:bottomRightRadius="10dp"
+    />
+    <size
+            android:width="82dp"
+            android:height="82dp" />
+
+    <solid android:color="#ffffff"/>
+</shape>
+
+
