@@ -1,0 +1,363 @@
+//SANI: How to save data to sqlite from API and veiw in activity page.
+
+Let's suppose we have following database table schema
+
+DROP TABLE IF EXISTS `tbl_websections`;
+CREATE TABLE IF NOT EXISTS `tbl_websections` (
+  `wsc_id` int(11) NOT NULL AUTO_INCREMENT,
+  `wsc_name` varchar(255) COLLATE utf8_bin NOT NULL,
+  `wsc_sort` int(11) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`wsc_id`)
+) ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+STEP 1: Create Model for database table
+=======================================
+Create a kotlin class in project. My path is C:\Users\OFFICE\AndroidStudioProjects\Trio\app\src\main\java
+
+package com.example.trio
+
+class SectionsModel (var sectionId: Int, val sectionName:String , val sectionSort: Int)
+
+
+Step 2: Create a sql helper for database table
+==============================================
+Create a kotlin class in project. My path is C:\Users\OFFICE\AndroidStudioProjects\Trio\app\src\main\java
+
+package com.example.trio
+
+import android.content.Context
+import android.database.sqlite.SQLiteDatabase
+import android.database.sqlite.SQLiteOpenHelper
+import android.content.ContentValues
+import android.database.Cursor
+import android.database.sqlite.SQLiteException
+
+//creating the database logic, extending the SQLiteOpenHelper base class
+class SectionDatabaseHandler(context: Context): SQLiteOpenHelper(context,DATABASE_NAME,null,DATABASE_VERSION) {
+    companion object {
+        private val DATABASE_VERSION        = 1
+        private val DATABASE_NAME           = "sani_defaultdb"
+
+        private val TABLE_SECTIONS          = "tbl_websections"
+        private val TABLE_SECTIONS_KEY_ID   = "wsc_id"
+        private val TABLE_SECTIONS_KEY_NAME = "wsc_name"
+        private val TABLE_SECTIONS_KEY_SORT = "wsc_sort"
+    }
+    override fun onCreate(db: SQLiteDatabase?)
+    {
+        // TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        //creating table with fields
+        val CREATE_SECTIONS_TABLE = ("CREATE TABLE " + TABLE_SECTIONS + "("
+                + TABLE_SECTIONS_KEY_ID + " INTEGER PRIMARY KEY," + TABLE_SECTIONS_KEY_NAME + " TEXT,"
+                + TABLE_SECTIONS_KEY_SORT + " INTEGER" + ")")
+        db?.execSQL(CREATE_SECTIONS_TABLE)
+    }
+
+    override fun onUpgrade(db: SQLiteDatabase?, oldVersion: Int, newVersion: Int)
+    {
+        //  TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        db!!.execSQL("DROP TABLE IF EXISTS " + TABLE_SECTIONS)
+        onCreate(db)
+    }
+
+
+    //method to insert data
+    fun addSections(sec: SectionsModel):Long{
+        val db = this.writableDatabase
+        val contentValues = ContentValues()
+        contentValues.put(TABLE_SECTIONS_KEY_ID, sec.sectionId)
+        contentValues.put(TABLE_SECTIONS_KEY_NAME, sec.sectionName) // EmpModelClass Name
+        contentValues.put(TABLE_SECTIONS_KEY_SORT,sec.sectionSort ) // EmpModelClass Phone
+        // Inserting Row
+        val success = db.insert(TABLE_SECTIONS, null, contentValues)
+        //2nd argument is String containing nullColumnHack
+        db.close() // Closing database connection
+        return success
+    }
+
+
+    fun readSections(): ArrayList<SectionsModel> {
+        val sections = ArrayList<SectionsModel>()
+        val selectQuery = "SELECT  * FROM $TABLE_SECTIONS"
+        val db = writableDatabase
+        var cursor: Cursor? = null
+        try {
+            cursor = db.rawQuery(selectQuery, null)
+        } catch (e: SQLiteException) {
+            db.execSQL(selectQuery)
+            return ArrayList()
+        }
+
+        var sectionId: Int
+        var sectionName: String
+        var sectionSort: Int
+        if (cursor!!.moveToFirst()) {
+            while (cursor.isAfterLast == false) {
+                sectionId   = cursor.getInt(cursor.getColumnIndex(TABLE_SECTIONS_KEY_ID))
+                sectionName = cursor.getString(cursor.getColumnIndex(TABLE_SECTIONS_KEY_NAME))
+                sectionSort = cursor.getInt(cursor.getColumnIndex(TABLE_SECTIONS_KEY_SORT))
+
+                sections.add(SectionsModel(sectionId, sectionName, sectionSort))
+                cursor.moveToNext()
+            }
+        }
+        return sections
+    }
+
+    //method to read data
+    fun viewSections():List<SectionsModel>{
+        val secList:ArrayList<SectionsModel> = ArrayList<SectionsModel>()
+        val selectQuery = "SELECT  * FROM $TABLE_SECTIONS"
+        val db = this.readableDatabase
+        var cursor: Cursor? = null
+        try{
+            cursor = db.rawQuery(selectQuery, null)
+        }catch (e: SQLiteException) {
+            db.execSQL(selectQuery)
+            return ArrayList()
+        }
+        var sectionId: Int
+        var sectionName: String
+        var sectionSort: Int
+        if (cursor.moveToFirst()) {
+            do {
+                sectionId   = cursor.getInt(cursor.getColumnIndex(TABLE_SECTIONS_KEY_ID))
+                sectionName = cursor.getString(cursor.getColumnIndex(TABLE_SECTIONS_KEY_NAME))
+                sectionSort = cursor.getInt(cursor.getColumnIndex(TABLE_SECTIONS_KEY_SORT))
+                val sec= SectionsModel(sectionId = sectionId, sectionName = sectionName, sectionSort = sectionSort)
+                secList.add(sec)
+            } while (cursor.moveToNext())
+        }
+        return secList
+    }
+    //method to update data
+    fun updateSections(sec: SectionsModel):Int{
+        val db = this.writableDatabase
+        val contentValues = ContentValues()
+        contentValues.put(TABLE_SECTIONS_KEY_ID, sec.sectionId)
+        contentValues.put(TABLE_SECTIONS_KEY_NAME, sec.sectionName) // EmpModelClass Name
+        contentValues.put(TABLE_SECTIONS_KEY_SORT,sec.sectionSort ) // EmpModelClass Email
+
+        // Updating Row
+        val success = db.update(TABLE_SECTIONS, contentValues,"id="+sec.sectionId,null)
+        //2nd argument is String containing nullColumnHack
+        db.close() // Closing database connection
+        return success
+    }
+    //method to delete data
+    fun deleteSections(sec: SectionsModel):Int{
+        val db = this.writableDatabase
+        val contentValues = ContentValues()
+        contentValues.put(TABLE_SECTIONS_KEY_ID, sec.sectionId) // EmpModelClass UserId
+        // Deleting Row
+        val success = db.delete(TABLE_SECTIONS,""+TABLE_SECTIONS_KEY_ID+"="+sec.sectionId,null)
+        //2nd argument is String containing nullColumnHack
+        db.close() // Closing database connection
+        return success
+    }
+
+    fun truncateSections():Int
+    {
+        val db = this.writableDatabase
+        val contentValues = ContentValues()
+        val success = 1
+            db.delete(TABLE_SECTIONS,null,null);
+        db.close() // Closing database connection
+        return success
+    }
+
+
+}
+
+
+Step 3: Call function on action bar click to synch data
+===============================================================
+..............................
+override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+      //  return when (item.itemId) {
+      //      R.id.action_settings -> true
+      //      else -> super.onOptionsItemSelected(item)
+      //  }
+
+        return  when (item.itemId) {
+            R.id.action_settings -> {
+                //SANI: Call function
+                synchdata()
+                 true
+            }
+
+            else ->  super.onOptionsItemSelected(item)
+        }
+    }
+..............................
+
+
+Step 4: Synch Data function definition
+======================================================
+
+fun synchdata()
+    {
+        if (cd.isConnectingToInternet(this@MainActivity)) {
+            //Toast.makeText(applicationContext, "net is there", Toast.LENGTH_LONG).show()
+
+
+            //SANI: Api URL
+            var livevar = "http://www.go4smart.com/Api/websections"
+            var query_string = ""
+
+            //SANI: Hit to API
+            HttpTask( {
+
+                if (it == null) {
+                    // println("connection error")
+                    return@HttpTask
+                }
+                //Log.v("response", it)
+
+
+                var json = JSONObject(it)
+                val getstatus = json.get("status")
+
+                if(getstatus == "error")
+                {
+                    var getmessage = json.get("data")
+                }else{
+                    //SANI: Truncate table before insert
+                    sectionHelper.truncateSections()
+
+                    var response_data = json.get("data")
+
+                    var json_array = JSONArray(response_data.toString())
+
+                    //val lView = findViewById(R.id.section_list_view) as ListView
+                    //val listItems = arrayOfNulls<String>(json_array.length())
+
+
+                    for (i in 0 until json_array.length())
+                    {
+                        var json_data = JSONObject(json_array[i].toString())
+
+
+                         var sectionid = json_data.get("wsc_id").toString()
+                         var name = json_data.get("wsc_name").toString()
+                         var sort = json_data.get("wsc_sort").toString()
+//SANI: Insert into sqlite database table
+                         var result = sectionHelper.addSections(SectionsModel(sectionId = sectionid.toInt(),sectionName = name,sectionSort = sort.toInt()))
+
+                        Toast.makeText(applicationContext, "Data has saved", Toast.LENGTH_LONG).show()
+
+                    }
+
+
+                    finish();
+                    startActivity(getIntent());
+
+
+
+                }
+
+            } ).execute("GET", livevar, query_string.toString())
+
+
+        } else {
+            Toast.makeText(applicationContext,
+                "Internet is not available. Please try later.", Toast.LENGTH_LONG).show()
+        }
+
+
+
+    }
+    
+    
+  NOTE: we have hit api using HTTP SYNCH class so we have to include it as well. Here it is
+  
+  ///////////////////////////////////
+    class HttpTask(callback: (String?) -> Unit) : AsyncTask<String, Unit, String>()  {
+
+        var callback = callback
+
+        override fun doInBackground(vararg params: String): String? {
+            val boundary: String
+            boundary = "===" + System.currentTimeMillis() + "===";
+
+            val url = URL(params[1])
+            val httpClient = url.openConnection() as HttpURLConnection
+            httpClient.setReadTimeout(60000)
+            httpClient.setConnectTimeout(60000)
+            httpClient.requestMethod = params[0]
+
+            if (params[0] == "POST") {
+                httpClient.instanceFollowRedirects = false
+                httpClient.doOutput = true
+                httpClient.doInput = true
+                httpClient.useCaches = false
+
+                httpClient.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+                httpClient.setRequestProperty("charset", "utf-8");
+                // httpClient.setRequestProperty("SANI-API-KEY", "200ceb26807d6bf99fd6f4f0d1ca54d4");
+                //httpClient.setRequestProperty("Content-Length", Integer.toString(params.getBytes().length));
+            }
+            try {
+                if (params[0] == "POST") {
+                    httpClient.connect()
+                    val os = httpClient.getOutputStream()
+                    val writer = BufferedWriter(OutputStreamWriter(os, "UTF-8"))
+                    writer.write(params[2])
+                    writer.flush()
+                    writer.close()
+                    os.close()
+                }
+                if (httpClient.responseCode == HttpURLConnection.HTTP_OK) {
+                    val stream = BufferedInputStream(httpClient.inputStream)
+                    val data: String = readStream(inputStream = stream)
+                    //Log.v("response", data)
+                    // val error_message = findViewById<View>(R.id.errormessage) as TextView
+                    //////////////////////////////////////////////////
+                    //var json = JSONObject(data)
+                    //Log.v("response", json.toString())
+                    //val getstatus = json.get("status")
+
+                    //Log.v("response", getstatus.toString())
+
+                    //if(getstatus == "error")
+                    //{
+                    //    var getmessage = json.get("data")
+                    //error_message.text = getmessage.toString()
+                    //}else{
+                    //error_message.text = "Success"
+                    //startActivity(Intent(this@MainActivity,dashboardActivity::class.java))
+                    //}
+                    //////////////////////////////////////////////////
+                    return data
+                } else {
+                    return ""
+                    //println("ERROR ${httpClient.responseCode}")
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
+                httpClient.disconnect()
+            }
+
+            return null
+        }
+
+        fun readStream(inputStream: BufferedInputStream): String {
+            val bufferedReader = BufferedReader(InputStreamReader(inputStream))
+            val stringBuilder = StringBuilder()
+            bufferedReader.forEachLine { stringBuilder.append(it) }
+            return stringBuilder.toString()
+        }
+
+        override fun onPostExecute(result: String?) {
+            super.onPostExecute(result)
+            callback(result)
+        }
+    }
+
+    companion object {
+        val TAG = "MainActivity"
+    }
