@@ -1,0 +1,179 @@
+//SANI: Parse data from url kotlin android
+Step 1:
+===========
+Include class at the end of activity
+.....................
+
+class HttpTask(callback: (String?) -> Unit) : AsyncTask<String, Unit, String>()  {
+
+        var callback = callback
+
+        override fun doInBackground(vararg params: String): String? {
+            val boundary: String
+            boundary = "===" + System.currentTimeMillis() + "===";
+
+            val url = URL(params[1])
+            val httpClient = url.openConnection() as HttpURLConnection
+            httpClient.setReadTimeout(60000)
+            httpClient.setConnectTimeout(60000)
+            httpClient.requestMethod = params[0]
+
+            if (params[0] == "POST") {
+                httpClient.instanceFollowRedirects = false
+                httpClient.doOutput = true
+                httpClient.doInput = true
+                httpClient.useCaches = false
+
+                httpClient.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+                httpClient.setRequestProperty("charset", "utf-8");
+                // httpClient.setRequestProperty("SANI-API-KEY", "200ceb26807d6bf99fd6f4f0d1ca54d4");
+                //httpClient.setRequestProperty("Content-Length", Integer.toString(params.getBytes().length));
+            }
+            try {
+                if (params[0] == "POST") {
+                    httpClient.connect()
+                    val os = httpClient.getOutputStream()
+                    val writer = BufferedWriter(OutputStreamWriter(os, "UTF-8"))
+                    writer.write(params[2])
+                    writer.flush()
+                    writer.close()
+                    os.close()
+                }
+                if (httpClient.responseCode == HttpURLConnection.HTTP_OK) {
+                    val stream = BufferedInputStream(httpClient.inputStream)
+                    val data: String = readStream(inputStream = stream)
+                    //Log.v("response", data)
+                    // val error_message = findViewById<View>(R.id.errormessage) as TextView
+                    //////////////////////////////////////////////////
+                    //var json = JSONObject(data)
+                    //Log.v("response", json.toString())
+                    //val getstatus = json.get("status")
+
+                    //Log.v("response", getstatus.toString())
+
+                    //if(getstatus == "error")
+                    //{
+                    //    var getmessage = json.get("data")
+                    //error_message.text = getmessage.toString()
+                    //}else{
+                    //error_message.text = "Success"
+                    //startActivity(Intent(this@MainActivity,dashboardActivity::class.java))
+                    //}
+                    //////////////////////////////////////////////////
+                    return data
+                } else {
+                    return ""
+                    //println("ERROR ${httpClient.responseCode}")
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
+                httpClient.disconnect()
+            }
+
+            return null
+        }
+
+        fun readStream(inputStream: BufferedInputStream): String {
+            val bufferedReader = BufferedReader(InputStreamReader(inputStream))
+            val stringBuilder = StringBuilder()
+            bufferedReader.forEachLine { stringBuilder.append(it) }
+            return stringBuilder.toString()
+        }
+
+        override fun onPostExecute(result: String?) {
+            super.onPostExecute(result)
+            callback(result)
+        }
+    }
+
+    companion object {
+        val TAG = "MainActivity"
+    }
+.....................
+} //SANI: END class MainActivity : AppCompatActivity() {
+
+
+Step 2:
+=======================
+Hit API
+
+...........................
+ var livevar = "http://www.go4smart.com/Api/websections"
+var query_string = ""
+
+//SANI: Hit to API
+        HttpTask( {
+
+            if (it == null) {
+                // println("connection error")
+                return@HttpTask
+            }
+            //Log.v("response", it)
+
+
+            var json = JSONObject(it)
+            val getstatus = json.get("status")
+
+            if(getstatus == "error")
+            {
+                var getmessage = json.get("data")
+            }else{
+
+
+                var response_data = json.get("data")
+
+                var json_array = JSONArray(response_data.toString())
+
+                //val lView = findViewById(R.id.section_list_view) as ListView
+                //val listItems = arrayOfNulls<String>(json_array.length())
+
+
+               for (i in 0 until json_array.length())
+               {
+                   var json_data = JSONObject(json_array[i].toString())
+                   val layout = findViewById(R.id.main_linear) as LinearLayout
+                   layout.orientation = LinearLayout.VERTICAL
+
+                   //val scrollingLayout = findViewById(R.id.main_linear) as scrollLayout
+                   val btn = Button(this)
+                   btn.setText(json_data.get("wsc_name").toString())
+                   //btn.setBackgroundResource(R.color.colorButton)
+                   btn.setBackgroundResource(R.drawable.listview_style)
+                   btn.setTextColor(Color.parseColor("#ffffff"))
+                   btn.setPadding(0,0,0,0)
+                  // btn.setTextSize(TypedValue.COMPLEX_UNIT_PX, 20);
+
+                   // btn.setTextSize(16, 2.0F)
+
+
+                   val params = LinearLayout.LayoutParams(
+                       LinearLayout.LayoutParams.FILL_PARENT,
+                       LinearLayout.LayoutParams.WRAP_CONTENT
+                   )
+
+                   params.setMargins(50, 20, 50, 0)
+
+                   btn.layoutParams = params
+
+                   btn.setOnClickListener {
+                       val intent = Intent(this, CategoryActivity::class.java)
+                       intent.putExtra ("sectionid", json_data.get("wsc_id").toString())
+                       startActivity(intent);
+                   }
+                   layout.addView(btn)
+
+
+               }
+
+
+
+
+
+
+            }
+
+        } ).execute("GET", livevar, query_string.toString())
+...........................
+
+
